@@ -90,278 +90,17 @@ ConvexHull::ConvexHull(const OP_NodeInfo* info) : myNodeInfo(info)
 
 ConvexHull::~ConvexHull()
 {
-
+	 
 }
 
 void
 ConvexHull::getGeneralInfo(SOP_GeneralInfo* ginfo, const OP_Inputs* inputs, void* reserved)
 {
 	// This will cause the node to cook every frame
-	ginfo->cookEveryFrameIfAsked = false;
+	ginfo->cookEveryFrameIfAsked = true;
 
 	//if direct to GPU loading:
-	bool directGPU = inputs->getParInt("Gpudirect") != 0 ? true : false;
-	ginfo->directToGPU = directGPU;
-
-}
-
-
-//-----------------------------------------------------------------------------------------------------
-//										Generate a geometry on CPU
-//-----------------------------------------------------------------------------------------------------
-
-void
-ConvexHull::cubeGeometry(SOP_Output* output, float scale)
-{
-	// to generate a geometry:
-	// addPoint() is the first function to be called.
-	// then we can add normals, colors, and any custom attributes for the points
-	// last function can be either addParticleSystem() or addTriangle()
-
-	// front
-	output->addPoint(Position(1.0f*scale, -1.0f, 1.0f));
-	output->addPoint(Position(3.0f*scale, -1.0f, 1.0f));
-	output->addPoint(Position(3.0f*scale, 1.0f, 1.0f));
-	output->addPoint(Position(1.0f*scale, 1.0, 1.0));
-	// back
-	output->addPoint(Position(1.0f*scale, -1.0f, -1.0f));
-	output->addPoint(Position(3.0f*scale, -1.0f, -1.0f));
-	output->addPoint(Position(3.0f*scale, 1.0f, -1.0f));
-	output->addPoint(Position(1.0f*scale, 1.0f, -1.0f));
-
-	Vector normal[] = {
-		// front
-		Vector(1.0, 0.0, 0.0),
-		Vector(0.0, 1.0, 0.0),
-		Vector(0.0, 0.0, 1.0),
-		Vector(1.0, 1.0, 1.0),
-		// back
-		Vector(1.0, 0.0, 0.0),
-		Vector(0.0, 1.0, 0.0),
-		Vector(0.0, 0.0, 1.0),
-		Vector(1.0, 1.0, 1.0),
-	};
-
-	Color color[] =
-	{
-		// front colors
-		Color(1.0, 0.0, 0.0, 1.0),
-		Color(0.0, 1.0, 0.0, 1.0),
-		Color(0.0, 0.0, 1.0, 1.0),
-		Color(1.0, 1.0, 1.0, 1.0),
-		// back colors
-		Color(1.0, 0.0, 0.0, 1.0),
-		Color(0.0, 1.0, 0.0, 1.0),
-		Color(0.0, 0.0, 1.0, 1.0),
-		Color(1.0, 1.0, 1.0, 1.0),
-	};
-
-	float color2[] =
-	{
-		// front colors
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		// back colors
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-	};
-
-	// indices of the input vertices
-
-	int32_t vertices[] = {
-		// front
-		0, 1, 2,
-		2, 3, 0,
-		// top
-		1, 5, 6,
-		6, 2, 1,
-		// back
-		7, 6, 5,
-		5, 4, 7,
-		// bottom
-		4, 0, 3,
-		3, 7, 4,
-		// left
-		4, 5, 1,
-		1, 0, 4,
-		// right
-		3, 2, 6,
-		6, 7, 3,
-	};
-
-	int sz = 8;
-
-
-	for (int32_t i = 0; i < sz; ++i)
-	{
-		output->setNormal(normal[i], i);
-		output->setColor(color[i], i);
-	}
-
-	SOP_CustomAttribData cu;
-	cu.name = "CustomColor";
-	cu.attribType = AttribType::Float;
-	cu.floatData = color2;
-	cu.numComponents = 4;
-	output->setCustomAttribute(&cu, sz);
-
-	for (int i = 0; i < 12; i++)
-	{
-		output->addTriangle(vertices[i * 3],
-							vertices[i * 3 + 1],
-							vertices[i * 3 + 2]);
-	}
-}
-
-void
-ConvexHull::lineGeometry(SOP_Output* output)
-{
-	// to generate a geometry:
-	// addPoint() is the first function to be called.
-	// then we can add normals, colors, and any custom attributes for the points
-	// last function to be called is addLines()
-
-	// line 1 = 9 vertices
-	output->addPoint(Position(-0.8f, 0.0f, 1.0f));
-	output->addPoint(Position(-0.6f, 0.4f, 1.0f));
-	output->addPoint(Position(-0.4f, 0.8f, 1.0f));
-	output->addPoint(Position(-0.2f, 0.4f, 1.0f));
-	output->addPoint(Position(0.0f,  0.0f, 1.0f));
-	output->addPoint(Position(0.2f, -0.4f, 1.0f));
-	output->addPoint(Position(0.4f, -0.8f, 1.0f));
-	output->addPoint(Position(0.6f, -0.4f, 1.0f));
-	output->addPoint(Position(0.8f,  0.0f, 1.0f));
-
-	// line 2 = 8 vertices
-	output->addPoint(Position(-0.8f, 0.2f, 1.0f));
-	output->addPoint(Position(-0.6f, 0.6f, 1.0f));
-	output->addPoint(Position(-0.4f, 1.0f, 1.0f));
-	output->addPoint(Position(-0.2f, 0.6f, 1.0f));
-	output->addPoint(Position(0.0f,  0.2f, 1.0f));
-	output->addPoint(Position(0.2f, -0.2f, 1.0f));
-	output->addPoint(Position(0.4f, -0.6f, 1.0f));
-	output->addPoint(Position(0.6f, -0.2f, 1.0f));
-
-	Vector normal[] =
-	{
-		Vector(1.0f, 1.0f, 1.0f),
-		Vector(1.0f, 1.0f, 1.0f),
-		Vector(1.0f, 1.0f, 1.0f),
-		Vector(1.0f, 1.0f, 1.0f),
-		Vector(1.0f, 1.0f, 1.0f),
-		Vector(1.0f, 1.0f, 1.0f),
-		Vector(1.0f, 1.0f, 1.0f),
-		Vector(1.0f, 1.0f, 1.0f),
-		Vector(1.0f, 1.0f, 1.0f),
-
-		Vector(1.0f, 1.0f, 1.0f),
-		Vector(1.0f, 1.0f, 1.0f),
-		Vector(1.0f, 1.0f, 1.0f),
-		Vector(1.0f, 1.0f, 1.0f),
-		Vector(1.0f, 1.0f, 1.0f),
-		Vector(1.0f, 1.0f, 1.0f),
-		Vector(1.0f, 1.0f, 1.0f),
-		Vector(1.0f, 1.0f, 1.0f),
-	};
-
-	Color color[] =
-	{
-		Color(1.0f, 0.0f, 0.0f, 1.0f),
-		Color(0.0f, 1.0f, 0.0f, 1.0f),
-		Color(0.0f, 0.0f, 1.0f, 1.0f),
-		Color(1.0f, 1.0f, 1.0f, 1.0f),
-		Color(1.0f, 0.0f, 0.0f, 1.0f),
-		Color(0.0f, 1.0f, 0.0f, 1.0f),
-		Color(0.0f, 0.0f, 1.0f, 1.0f),
-		Color(1.0f, 1.0f, 1.0f, 1.0f),
-		Color(1.0f, 0.0f, 0.0f, 1.0f),
-
-		Color(1.0f, 0.0f, 0.0f, 1.0f),
-		Color(0.0f, 1.0f, 0.0f, 1.0f),
-		Color(0.0f, 0.0f, 1.0f, 1.0f),
-		Color(1.0f, 1.0f, 1.0f, 1.0f),
-		Color(1.0f, 0.0f, 0.0f, 1.0f),
-		Color(0.0f, 1.0f, 0.0f, 1.0f),
-		Color(0.0f, 0.0f, 1.0f, 1.0f),
-		Color(1.0f, 1.0f, 1.0f, 1.0f),
-	};
-
-	float color2[] =
-	{
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-		1.0, 0.0, 0.0, 1.0,
-	};
-
-	// indices of the input vertices
-
-	int32_t vertices[] =
-	{
-		0, 1, 2, 3, 4, 5, 6, 7, 8,
-		9, 10, 11, 12, 13, 14, 15, 16
-	};
-
-	int32_t lineSizes[]
-	{
-		9, 8
-	};
-
-	// the size of all vertices of all lines:
-	int sz = 9 + 8;
-
-	for (int32_t i = 0; i < sz; ++i)
-	{
-		output->setNormal(normal[i], i);
-		output->setColor(color[i], i);
-	}
-
-	SOP_CustomAttribData cu;
-	cu.name = "CustomColor";
-	cu.attribType = AttribType::Float;
-	cu.floatData = color2;
-	cu.numComponents = 4;
-	output->setCustomAttribute(&cu, sz);
-
-	//output->addLine(vertices, sz);
-	output->addLines(vertices, lineSizes, 2);
-}
-
-void
-ConvexHull::triangleGeometry(SOP_Output* output)
-{
-	int32_t vertices[3] = { 0, 1, 2 };
-
-	//int sz = 3;
-	output->addPoint(Position(0.0f, 0.0f, 0.0f));
-	output->addPoint(Position(0.0f, 2.0f, 0.0f));
-	output->addPoint(Position(2.0f, 0.0f, 0.0f));
-
-	Vector normal(0.0f, 0.0f, 1.0f);
-
-	output->setNormal(normal, 0);
-	output->setNormal(normal, 1);
-	output->setNormal(normal, 2);
-
-	output->addTriangle(vertices[0], vertices[1], vertices[2]);
+	ginfo->directToGPU = false;
 
 }
 
@@ -372,157 +111,113 @@ ConvexHull::execute(SOP_Output* output, const OP_Inputs* inputs, void* reserved)
 
 	if (inputs->getNumInputs() > 0)
 	{
-		inputs->enablePar("Reset", 0);	// not used
-		inputs->enablePar("Shape", 0);	// not used
-		inputs->enablePar("Scale", 0);  // not used
 
 		const OP_SOPInput	*sinput = inputs->getInputSOP(0);
 
 		const Position* ptArr = sinput->getPointPositions();
-		const Vector* normals = nullptr;
-		const Color* colors = nullptr;
-		const TexCoord* textures = nullptr;
-		int32_t numTextures = 0;
 
-		if (sinput->hasNormals())
-		{
-			normals = sinput->getNormals()->normals;
+		const float* positions = reinterpret_cast<const float*>(ptArr);
+
+	    quickhull::ConvexHull<float> hull = qh.getConvexHull(positions,
+		                                                    sinput->getNumPoints(),
+		                                                    false,
+		                                                    false);
+
+		
+		const auto& vertexBuffer = hull.getVertexBuffer();
+		
+		for (auto& point : vertexBuffer) {
+			output->addPoint(Position(point.x, point.y, point.z));
 		}
 
-		if (sinput->hasColors())
-		{
-			colors = sinput->getColors()->colors;
-		}
+		const auto& indexBuffer = hull.getIndexBuffer();
 
-		if (sinput->getTextures()->numTextureLayers)
-		{
-			textures = sinput->getTextures()->textures;
-			numTextures = sinput->getTextures()->numTextureLayers;
-		}
-
-		for (int i = 0; i < sinput->getNumPoints(); i++)
-		{
-			output->addPoint(ptArr[i]);
-
-			if (normals)
-			{
-				output->setNormal(normals[i], i);
-			}
-
-			if (colors)
-			{
-				output->setColor(colors[i], i);
-			}
-
-			if (textures)
-			{
-				//output->setTexCoord((float*)(textures + (i * numTextures * 3)), numTextures, i);
-				output->setTexCoord(textures + (i * numTextures), numTextures, i);
-			}
-
-		}
-
-		for (int i = 0; i < sinput->getNumCustomAttributes(); i++)
-		{
-			const SOP_CustomAttribData* customAttr = sinput->getCustomAttribute(i);
-
-			if (customAttr->attribType == AttribType::Float)
-			{
-				output->setCustomAttribute(customAttr, sinput->getNumPoints());
-			}
-			else
-			{
-				output->setCustomAttribute(customAttr, sinput->getNumPoints());
-			}
-		}
-
-
-		for (int i = 0; i < sinput->getNumPrimitives(); i++)
+		for (size_t i = 0; i < indexBuffer.size() / 3; i++)
 		{
 
-			const SOP_PrimitiveInfo primInfo = sinput->getPrimitive(i);
-
-			const int32_t* primVert = primInfo.pointIndices;
+			size_t triangleFirstIndice = i * 3;
 
 			// Note: the addTriangle() assumes that the input SOP has triangulated geometry,
 			// if the input geometry is not a triangle, you need to convert it to triangles first:
-			output->addTriangle(*(primVert), *(primVert + 1), *(primVert + 2));
+			output->addTriangle(indexBuffer[triangleFirstIndice],
+				                indexBuffer[triangleFirstIndice+1],
+				                indexBuffer[triangleFirstIndice+2]);
 		}
 
 	}
-	else
-	{
-		inputs->enablePar("Shape", 1);
+	//else
+	//{
+	//	inputs->enablePar("Shape", 1);
 
-		int shape = inputs->getParInt("Shape");
+	//	int shape = inputs->getParInt("Shape");
 
-		inputs->enablePar("Scale", 1);
-		double	 scale = inputs->getParDouble("Scale");
+	//	inputs->enablePar("Scale", 1);
+	//	double	 scale = inputs->getParDouble("Scale");
 
-		// if there is a input chop parameter:
-		const OP_CHOPInput	*cinput = inputs->getParCHOP("Chop");
-		if (cinput)
-		{
-			int numSamples = cinput->numSamples;
-			int ind = 0;
-			myChopChanName = std::string(cinput->getChannelName(0));
-			myChop = inputs->getParString("Chop");
+	//	// if there is a input chop parameter:
+	//	const OP_CHOPInput	*cinput = inputs->getParCHOP("Chop");
+	//	if (cinput)
+	//	{
+	//		int numSamples = cinput->numSamples;
+	//		int ind = 0;
+	//		myChopChanName = std::string(cinput->getChannelName(0));
+	//		myChop = inputs->getParString("Chop");
 
-			myChopChanVal = float(cinput->getChannelData(0)[ind]);
-			scale = float(cinput->getChannelData(0)[ind] * scale);
+	//		myChopChanVal = float(cinput->getChannelData(0)[ind]);
+	//		scale = float(cinput->getChannelData(0)[ind] * scale);
 
-		}
+	//	}
 
-		// create the geometry and set the bounding box for exact homing:
-		switch (shape)
-		{
-			case 0:		// cube
-			{
-				cubeGeometry(output, (float)scale);
-				output->setBoundingBox(BoundingBox(1.0f, -1.0f, -1.0f, 3.0f, 1.0f, 1.0f));
+	//	// create the geometry and set the bounding box for exact homing:
+	//	switch (shape)
+	//	{
+	//		case 0:		// cube
+	//		{
+	//			cubeGeometry(output, (float)scale);
+	//			output->setBoundingBox(BoundingBox(1.0f, -1.0f, -1.0f, 3.0f, 1.0f, 1.0f));
 
-				// Add Point and Primitive groups:
-				int numPts = output->getNumPoints();
-				int grPts = floor(numPts / 2);
-				int numPr = output->getNumPrimitives();
+	//			// Add Point and Primitive groups:
+	//			int numPts = output->getNumPoints();
+	//			int grPts = floor(numPts / 2);
+	//			int numPr = output->getNumPrimitives();
 
-				const char gr1[] = "pointGroup";
-				const char gr2[] = "primGroup";
+	//			const char gr1[] = "pointGroup";
+	//			const char gr2[] = "primGroup";
 
-				output->addGroup(SOP_GroupType::Point, gr1);
-				output->addGroup(SOP_GroupType::Primitive, gr2);
+	//			output->addGroup(SOP_GroupType::Point, gr1);
+	//			output->addGroup(SOP_GroupType::Primitive, gr2);
 
-				for (int i = 0; i < grPts; i++)
-				{
-					output->addPointToGroup(i, gr1);
-				}
+	//			for (int i = 0; i < grPts; i++)
+	//			{
+	//				output->addPointToGroup(i, gr1);
+	//			}
 
-				for (int i = 0; i < numPr; i++)
-				{
-					output->addPrimToGroup(i, gr2);
-				}
+	//			for (int i = 0; i < numPr; i++)
+	//			{
+	//				output->addPrimToGroup(i, gr2);
+	//			}
 
-				break;
-			}
-			case 1:		// triangle
-			{
-				triangleGeometry(output);
-				break;
-			}
-			case 2:		// line
-			{
-				lineGeometry(output);
-				break;
-			}
-			default:
-			{
-				cubeGeometry(output, (float)scale);
-				output->setBoundingBox(BoundingBox(1.0f, -1.0f, -1.0f, 3.0f, 1.0f, 1.0f));
-				break;
-			}
-		}
+	//			break;
+	//		}
+	//		case 1:		// triangle
+	//		{
+	//			triangleGeometry(output);
+	//			break;
+	//		}
+	//		case 2:		// line
+	//		{
+	//			lineGeometry(output);
+	//			break;
+	//		}
+	//		default:
+	//		{
+	//			cubeGeometry(output, (float)scale);
+	//			output->setBoundingBox(BoundingBox(1.0f, -1.0f, -1.0f, 3.0f, 1.0f, 1.0f));
+	//			break;
+	//		}
+	//	}
 
-	}
+	//}
 
 
 }

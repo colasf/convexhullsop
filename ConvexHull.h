@@ -16,7 +16,7 @@
 
 #include "SOP_CPlusPlusBase.h"
 #include <string>
-
+#include "quickhull/QuickHull.hpp"
 
 
 // To get more help about these functions, look at SOP_CPlusPlusBase.h
@@ -55,11 +55,11 @@ private:
 	// example functions for generating a geometry, change them with any
 	// fucntions and algorithm:
 
-	void cubeGeometry(SOP_Output* output, float scale = 1.0f);
+	//void cubeGeometry(SOP_Output* output, float scale = 1.0f);
 
-	void lineGeometry(SOP_Output* output);
+	//void lineGeometry(SOP_Output* output);
 
-	void triangleGeometry(SOP_Output* output);
+	//void triangleGeometry(SOP_Output* output);
 
 	void cubeGeometryVBO(SOP_VBOOutput* output, float scale = 1.0f);
 
@@ -88,4 +88,6 @@ private:
 	std::string             myDat;
 
 	int						myNumVBOTexLayers;
+
+	quickhull::QuickHull<float> qh;
 };
