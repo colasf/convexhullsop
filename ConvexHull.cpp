@@ -90,7 +90,7 @@ void
 ConvexHull::getGeneralInfo(SOP_GeneralInfo* ginfo, const OP_Inputs* inputs, void* reserved)
 {
 	// This will cause the node to cook every frame
-	ginfo->cookEveryFrameIfAsked = true;
+	ginfo->cookEveryFrameIfAsked = false;
 
 	//if direct to GPU loading:
 	ginfo->directToGPU = false;
